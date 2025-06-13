@@ -25,8 +25,8 @@ import static java.util.stream.Collectors.toList;
 public class ProductServiceImpl implements ProductService {
     private final ProductsRepository productsRepository;
     private final CategoryRepository categoryRepository;
-    private ModelMapper modelMapper;
-    private FileService fileService;
+    private final ModelMapper modelMapper;
+    private final FileService fileService;
 
     @Value("${image.upload.dir}")
     private String path;
@@ -43,27 +43,33 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponse getAllProducts(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+       //product size is 0 or not
         Sort sortByandOrder = sortOrder.equalsIgnoreCase("asc")?Sort.by(sortBy).ascending():Sort.by(sortBy).descending();
         Pageable pageDetails = PageRequest.of(pageNumber, pageSize,sortByandOrder);
         Page<Products> products= productsRepository.findAll(pageDetails);
+        if(products.isEmpty()){
+            throw new APIException("No products found");
+        }
+        List<ProductDTO> productDtos =products.stream().map(product -> modelMapper.map(product,ProductDTO.class)).toList();
+        return getProductResponse(products, productDtos);
 
-        List<ProductDTO> productDTOS =products.stream().map(product -> modelMapper.map(product,ProductDTO.class)).toList();
-
-        ProductResponse productResponse = new ProductResponse();
-        productResponse.setProductResponse(productDTOS);
-        productResponse.setPageSize(products.getSize());
-        productResponse.setTotalPages(products.getTotalPages());
-        productResponse.setTotalElements(products.getTotalElements());
-        productResponse.setFirstPage(products.isFirst());
-        productResponse.setLastPage(products.isLast());
-        return productResponse;
 
     }
 
     @Override
     public ProductDTO addProductToCategory(Long categoryId, ProductDTO productDto) {
+
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(()->new APIException("Category with id "+categoryId+" not found"));
+
+        //chek if the product is present or not
+        List<Products> products = category.getProductsCategoryList();
+        for (Products ps: products){
+            if(ps.getName().equalsIgnoreCase(productDto.getName())){
+                throw new APIException("Product with name "+productDto.getName()+" already exists in category "+category.getName());
+            }
+        }
+
         Products product =modelMapper.map(productDto,Products.class);
         product.setCategory(category);
         Products savedProduct=productsRepository.save(product);
@@ -78,24 +84,22 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponse getProductByCategoryId(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
-       //implement pagination and sorting
+
+        //implement pagination and sorting
         Sort sortByOrder=sortOrder.equalsIgnoreCase("asc")?Sort.by(sortBy).ascending():Sort.by(sortBy).descending();
 
         Pageable pageDetails = PageRequest.of(pageNumber, pageSize,sortByOrder);
        // List<Products> products=productsRepository.getProductsByCategory_Id(categoryId);
         Page<Products> products=productsRepository.findByCategory_Id(categoryId,pageDetails);
+
+        //product size is 0 or not
+        if(products.isEmpty()){
+            throw new APIException("No products found");
+        }
+
         List<ProductDTO> productDtos = products.stream().map(product->modelMapper.map(product,ProductDTO.class)).toList();
 
-        ProductResponse response = new ProductResponse();
-        response.setProductResponse(productDtos);
-        response.setTotalElements(products.getTotalElements());
-        response.setTotalPages(products.getTotalPages());
-        response.setPageSize(products.getSize());
-        response.setFirstPage(products.isFirst());
-        response.setLastPage(products.isLast());
-        response.setPageNumber(products.getNumber());
-
-        return response;
+        return getProductResponse(products, productDtos);
     }
 
     @Override
@@ -105,19 +109,27 @@ public class ProductServiceImpl implements ProductService {
 
         Pageable pageDetails = PageRequest.of(pageNumber, pageSize,sortByOrder);
         Page<Products> products = productsRepository.findByNameLikeIgnoreCase("%" + keyword + "%",pageDetails);
-        if(products==null || products.isEmpty()){
+        //product size is 0 or not
+        if(products.isEmpty()){
+            throw new APIException("No products found");
+        }
+        if(products.isEmpty()){
             throw new APIException("No products found for keyword "+keyword);
         }
        List<ProductDTO> productDtos= products.stream().map(product ->modelMapper.map(product,ProductDTO.class)).collect(toList());
-       ProductResponse response = new ProductResponse();
-       response.setProductResponse(productDtos);
-       response.setTotalElements(products.getTotalElements());
-       response.setTotalPages(products.getTotalPages());
-       response.setPageSize(products.getSize());
-       response.setFirstPage(products.isFirst());
-       response.setLastPage(products.isLast());
-       response.setPageNumber(products.getNumber());
-       return response;
+        return getProductResponse(products, productDtos);
+    }
+
+    private ProductResponse getProductResponse(Page<Products> products, List<ProductDTO> productDtos) {
+        ProductResponse response = new ProductResponse();
+        response.setProductResponse(productDtos);
+        response.setTotalElements(products.getTotalElements());
+        response.setTotalPages(products.getTotalPages());
+        response.setPageSize(products.getSize());
+        response.setFirstPage(products.isFirst());
+        response.setLastPage(products.isLast());
+        response.setPageNumber(products.getNumber());
+        return response;
     }
 
     @Override
@@ -159,7 +171,4 @@ public class ProductServiceImpl implements ProductService {
         }
         throw new APIException("Image cannot be empty");
     }
-
-
-
 }

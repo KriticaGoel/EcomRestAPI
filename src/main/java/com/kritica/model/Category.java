@@ -63,7 +63,7 @@ public class Category {
     @Column(name = "updated_at", nullable = false)
     private Date updatedAt;
 
-    @OneToMany(mappedBy = "category")
+    @OneToMany(mappedBy = "category",cascade = CascadeType.ALL)
     private List<Products> productsCategoryList;
 
 }
