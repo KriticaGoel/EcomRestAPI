@@ -8,6 +8,9 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
 public class ProductController {
@@ -72,9 +75,14 @@ public class ProductController {
         return ResponseEntity.ok(productService.updateProduct(id,product));
     }
     //8. ADMIN - Update the image of a product - Product id path variable - Multipart file(form data)- Return ProductDTO 200
-
+    @PutMapping("/admin/products/{productId}/image")
+    public ResponseEntity<ProductDTO> updateProductImage(@PathVariable Long productId,
+                                                         @RequestParam("image") MultipartFile image) throws IOException {
+        ProductDTO updateProduct = productService.updateProductImage(productId, image);
+        return ResponseEntity.ok(updateProduct);
+    }
     //9. SELLER - Get Product by seller - seller id is a path variable - pageNumber, page Size,Sort by, SortOrder- NA- Product Response, Https Status 200
 
-    //10. ADMIN-Retrieve Product count- return long , 200
+    //10. ADMIN-Retrieve Product count - return long , 200
 
 }

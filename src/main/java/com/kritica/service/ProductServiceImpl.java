@@ -8,30 +8,37 @@ import com.kritica.payload.ProductResponse;
 import com.kritica.repository.CategoryRepository;
 import com.kritica.repository.ProductsRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 
 @Service
-@Validated
 public class ProductServiceImpl implements ProductService {
     private final ProductsRepository productsRepository;
     private final CategoryRepository categoryRepository;
     private ModelMapper modelMapper;
+    private FileService fileService;
+
+    @Value("${image.upload.dir}")
+    private String path;
 
     public ProductServiceImpl(CategoryRepository categoryRepository,
                               ProductsRepository productsRepository,
-                              ModelMapper modelMapper) {
+                              ModelMapper modelMapper,
+                              FileService fileService) {
         this.categoryRepository = categoryRepository;
         this.productsRepository = productsRepository;
         this.modelMapper = modelMapper;
+        this.fileService = fileService;
     }
 
     @Override
@@ -134,4 +141,25 @@ public class ProductServiceImpl implements ProductService {
 
         return modelMapper.map(product,ProductDTO.class);
     }
+
+    @Override
+    public ProductDTO updateProductImage(Long productId, MultipartFile image) throws IOException {
+        //1. Get Product from product id
+        Products product= productsRepository.findById(productId).orElseThrow(()->new APIException("Product with id "+productId+" not found"));
+        if(image!=null){
+            //2. upload image to the server
+            //3.Get the file name of updated image
+            String fileName = fileService.uploadImage(path,image);
+            //4. updating the new file name to the product
+            product.setImageUrl(fileName);
+            //5. save update product
+            Products updatedProduct=productsRepository.save(product);
+            //6. return DTO after mapping the product to DTO
+            return modelMapper.map(updatedProduct,ProductDTO.class);
+        }
+        throw new APIException("Image cannot be empty");
+    }
+
+
+
 }

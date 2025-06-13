@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
 @ComponentScan(basePackages = {"com.kritica"})
-@EntityScan("com.kritica.model")  // Add this to scan your entities package
+@EntityScan("com.kritica.model")  // Add this to scan your entity package
 @EnableJpaRepositories("com.kritica.repository") // Add this if you have repositories
 
 public class EcomRestApiApplication {
