@@ -8,6 +8,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @NoArgsConstructor
@@ -39,11 +41,10 @@ public class Products {
     @Column(name = "updated_at", nullable = false)
     private Date updatedAt;
 
-//    @ManyToMany
-//    @JoinTable(name = "product_users",
-//            joinColumns = @JoinColumn(name = "products_id"),
-//            inverseJoinColumns = @JoinColumn(name = "users_id"))
-//    private Set<Users> usersSet = new HashSet<>();
+    @ManyToOne
+    @JoinColumn(name = "seller_id")
+    private Users user;
+
     @ManyToOne()
     @JoinColumn(name = "category_id")
     private Category category;

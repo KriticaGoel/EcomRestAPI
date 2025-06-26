@@ -1,12 +1,15 @@
 package com.kritica.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Data
@@ -19,9 +22,15 @@ public class Users {
     private int id;
     @Column(name = "username", unique = true, nullable = false, length = 50)
     private String username;
-    @Column(name = "password", unique = true, nullable = false, length = 100)
+    @Column(name = "password", unique = false, nullable = false, length = 100)
     private String password;
 
+    @ManyToMany(cascade = {CascadeType.PERSIST,CascadeType.MERGE},
+    fetch = FetchType.EAGER)
+    @JoinTable(name="user_roles",
+    joinColumns = @JoinColumn(name="user_id"),
+    inverseJoinColumns = @JoinColumn(name="role_id"))
+    private Set<Role> roles = new HashSet<>();
 
     //to make bidirection -> we want to access profile class data usimg user class
     //and we dont want any foreign key of profile in user
@@ -31,13 +40,20 @@ public class Users {
     //  @JsonIgnore
     private Profiles profile;
 
-    //  @JsonIgnore
+      @JsonIgnore
     @JsonManagedReference("user-orders") // Wrong: Non-owning side should use @JsonBackReference
     @OneToMany(mappedBy = "users")
     private List<Orders> orders;
 
-//    @JsonIgnore
-//    @ManyToMany(mappedBy = "usersSet")
-//    private Set<Products> productsSet = new HashSet<>();
+    @JsonIgnore
+    @OneToMany(mappedBy = "user",cascade = {CascadeType.PERSIST,CascadeType.MERGE})
+    private Set<Products> productsSet = new HashSet<>();
+
+    @ManyToMany(cascade = {CascadeType.PERSIST,CascadeType.MERGE},fetch = FetchType.LAZY)
+    @JoinTable(name="user_address",
+    joinColumns = @JoinColumn(name="user_id"),
+    inverseJoinColumns = @JoinColumn(name="address_id"))
+    private List<Address> addresses;
+
 
 }
