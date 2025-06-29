@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 @RestController
+        @RequestMapping("/api")
 public class ProductController {
 
     private ProductService productService;
@@ -22,7 +23,7 @@ public class ProductController {
 
     //1. PUBLIC - Retrieve all products - pageNumber, page Size,Sort by, SortOrder
         //Return Product Response, Https Status 200
-    @GetMapping("public/products")
+    @GetMapping("/public/products")
     public ResponseEntity<ProductResponse> getAllProducts(
             @RequestParam(name="pageNumber", defaultValue = AppConstants.PAGE_NUMBER,required = false) Integer pageNumber,
             @RequestParam(name="pageSize", defaultValue = AppConstants.PAGE_SIZE,required = false) Integer pageSize,

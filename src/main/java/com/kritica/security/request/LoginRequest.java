@@ -1,4 +1,4 @@
-package com.kritica.security.jwt;
+package com.kritica.security.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -3,6 +3,9 @@ package com.kritica.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,6 +28,8 @@ public class Users {
     @Column(name = "password", unique = false, nullable = false, length = 100)
     private String password;
 
+    @Column(name = "email_address", unique = true, nullable = false, length = 100)
+    private String emailAddress;
     @ManyToMany(cascade = {CascadeType.PERSIST,CascadeType.MERGE},
     fetch = FetchType.EAGER)
     @JoinTable(name="user_roles",
@@ -56,4 +61,6 @@ public class Users {
     private List<Address> addresses;
 
 
+    public Users(@NotNull(message = "username cannot be null") @Size(min=3, max=20,message="username must contain at least 3 character") String username, String encode, @Email(message = "Email is not valid") @NotNull(message = "Email cannot be null") @Size(min=3, max=50, message="Email must contain at least 3 character") String email) {
+    }
 }
